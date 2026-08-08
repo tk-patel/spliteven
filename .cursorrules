@@ -1,0 +1,64 @@
+# SplitEven — AI Agent Instructions
+
+You are building SplitEven, a Splitwise-style expense splitting web app.
+
+## MANDATORY FIRST STEP — EVERY SESSION
+
+1. Read `PROGRESS.md` to understand what has been done and what is next.
+2. Identify the current phase from the "Next phase to work on" field.
+3. Open `MASTER_PLAN.md` and read ONLY the section for the current phase.
+4. Execute the phase step by step.
+5. After EACH completed step, update the checkbox in `PROGRESS.md`.
+6. After completing the entire phase, update the status fields in `PROGRESS.md`.
+
+## Rules
+
+### Code Style
+- PHP: Use `declare(strict_types=1);` in all new PHP files.
+- PHP: Type-hint all function parameters and return types.
+- PHP: Use Laravel conventions (camelCase methods, snake_case DB columns).
+- Vue: Use `<script setup>` with Composition API. No Options API.
+- Vue: Use shadcn-vue components from `@/Components/ui/` where available.
+- CSS: Mobile-first. Start with base styles, use `md:` and `lg:` for larger screens.
+- Money: Use DECIMAL(12,2) in DB. Use bcmath functions in PHP for calculations.
+
+### DO NOT
+- Do NOT modify files in `app/Services/`. They are pre-written and tested.
+- Do NOT change the database schema beyond what MASTER_PLAN.md specifies.
+- Do NOT install additional npm packages without noting it in PROGRESS.md.
+- Do NOT create separate API routes. Use Inertia for all page rendering.
+- Do NOT use Options API in Vue components.
+- Do NOT skip updating PROGRESS.md after completing steps.
+
+### When You Encounter an Error
+1. Read the error message carefully.
+2. Check imports — missing imports are the #1 cause of errors.
+3. Check that the file path matches the expected structure in MASTER_PLAN.md Section 12.
+4. If you cannot resolve it in 3 attempts, log it in the Issues Log in PROGRESS.md and move on.
+
+### Testing
+- Run `php artisan test` after completing Phase 12.
+- Run `npm run build` after any frontend changes to catch compile errors.
+- Use `php artisan tinker` to verify model relationships and service calculations.
+
+### Inertia.js Patterns
+- Use `useForm` from `@inertiajs/vue3` for form submissions.
+- Use `router.visit()` or `<Link>` component for navigation.
+- Use `usePage()` to access shared props (auth user, flash messages).
+- Layouts: use `defineOptions({ layout: AppLayout })` in each page component.
+
+### File Organization
+- Pages go in `resources/js/Pages/<Feature>/`.
+- Shared components go in `resources/js/Components/`.
+- shadcn-vue components are in `resources/js/Components/ui/` (auto-generated, don't edit).
+- Layouts go in `resources/js/Layouts/`.
+
+## Quick Reference
+
+- **Current app name**: SplitEven
+- **Database**: MySQL, database name `spliteven`
+- **PHP min version**: 8.2
+- **Laravel version**: 12
+- **Node packages**: Vue 3, Inertia, Tailwind CSS, shadcn-vue, lucide-vue-next
+- **Auth**: Laravel starter kit (Breeze/Inertia), modified to include username
+- **Key files to never touch**: `app/Services/SplitCalculator.php`, `app/Services/BalanceCalculator.php`, `app/Services/DebtSimplifier.php`

@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\PasskeyAuthenticatable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
+
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $username
+ * @property string $email
+ * @property string $currency
+ * @property string|null $email_verified_at
+ * @property string $password
+ * @property string|null $two_factor_secret
+ * @property string|null $two_factor_recovery_codes
+ * @property string|null $remember_token
+ * @property Carbon|null $two_factor_confirmed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
+#[Fillable(['name', 'email', 'password', 'username', 'currency'])]
+#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+class User extends Authenticatable implements PasskeyUser
+{
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
+            'currency' => 'string',
+        ];
+    }
+
+    /**
+     * Get friendships sent by this user.
+     */
+    public function friendshipsSent(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'requester_id');
+    }
+
+    /**
+     * Get friendships received by this user.
+     */
+    public function friendshipsReceived(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'addressee_id');
+    }
+
+    /**
+     * Get friends (accepted friendships both sent and received).
+     */
+    public function friends(): array
+    {
+        $sent = $this->friendshipsSent()
+            ->where('status', 'accepted')
+            ->with('addressee')
+            ->get()
+            ->pluck('addressee');
+
+        $received = $this->friendshipsReceived()
+            ->where('status', 'accepted')
+            ->with('requester')
+            ->get()
+            ->pluck('requester');
+
+        return array_merge($sent->toArray(), $received->toArray());
+    }
+
+    /**
+     * Get groups this user is a member of.
+     */
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_members')->withTimestamps();
+    }
+
+    /**
+     * Get expenses paid by this user.
+     */
+    public function expensesPaid(): HasMany
+    {
+        return $this->hasMany(Expense::class, 'paid_by');
+    }
+
+    /**
+     * Get expense participations for this user.
+     */
+    public function expenseParticipations(): HasMany
+    {
+        return $this->hasMany(ExpenseParticipant::class);
+    }
+
+    /**
+     * Get settlements paid by this user (as payer).
+     */
+    public function settlementsPaid(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'payer_id');
+    }
+
+    /**
+     * Get settlements received by this user (as payee).
+     */
+    public function settlementsReceived(): HasMany
+    {
+        return $this->hasMany(Settlement::class, 'payee_id');
+    }
+}

@@ -1,0 +1,219 @@
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans:
+        Instrument Sans, ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+@layer utilities {
+    body,
+    html {
+        --font-sans:
+            'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+            'Noto Color Emoji';
+    }
+}
+
+/*
+  SplitEven brand palette
+  ─────────────────────────────────────────
+  Ivory       #f1f7ed  → background / surface
+  Dark Slate  #243e36  → primary (buttons, active states)
+  Muted Teal  #7ca982  → secondary / accent
+  ─────────────────────────────────────────
+  To retheme: update the hex values in the two blocks below
+  (light :root and .dark). Everything else derives from them.
+*/
+
+:root {
+    /* --- surfaces --- */
+    --background: #f1f7ed;
+    --foreground: #1a2e27;
+    --card: #f7faf4;
+    --card-foreground: #1a2e27;
+    --popover: #f7faf4;
+    --popover-foreground: #1a2e27;
+
+    /* --- primary: Dark Slate Grey #243e36 --- */
+    --primary: #243e36;
+    --primary-foreground: #f1f7ed;
+
+    /* --- secondary: Muted Teal #7ca982 --- */
+    --secondary: #d4e8d6;
+    --secondary-foreground: #243e36;
+
+    /* --- muted / subtle --- */
+    --muted: #e3ede0;
+    --muted-foreground: #4d6b5e;
+
+    /* --- accent: soft teal tint --- */
+    --accent: #c6e0c9;
+    --accent-foreground: #243e36;
+
+    /* --- destructive (kept neutral red) --- */
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: #f1f7ed;
+
+    /* --- borders / inputs --- */
+    --border: #c8dcc9;
+    --input: #c8dcc9;
+    --ring: #7ca982;
+
+    /* --- charts --- */
+    --chart-1: #7ca982;
+    --chart-2: #243e36;
+    --chart-3: #4d8c62;
+    --chart-4: #a3c4a8;
+    --chart-5: #b8d8bc;
+
+    /* --- radius --- */
+    --radius: 0.5rem;
+
+    /* --- sidebar --- */
+    --sidebar-background: #e6f0e3;
+    --sidebar-foreground: #1a2e27;
+    --sidebar-primary: #243e36;
+    --sidebar-primary-foreground: #f1f7ed;
+    --sidebar-accent: #d4e8d6;
+    --sidebar-accent-foreground: #243e36;
+    --sidebar-border: #c8dcc9;
+    --sidebar-ring: #7ca982;
+    --sidebar: #e6f0e3;
+}
+
+.dark {
+    /* --- surfaces: deep forest green --- */
+    --background: #0e1a16;
+    --foreground: #e8f2e5;
+    --card: #152318;
+    --card-foreground: #e8f2e5;
+    --popover: #152318;
+    --popover-foreground: #e8f2e5;
+
+    /* --- primary: Ivory #f1f7ed (flipped for dark mode) --- */
+    --primary: #f1f7ed;
+    --primary-foreground: #243e36;
+
+    /* --- secondary: deeper teal --- */
+    --secondary: #1e3328;
+    --secondary-foreground: #c6dfc9;
+
+    /* --- muted / subtle --- */
+    --muted: #1b2d22;
+    --muted-foreground: #7caa82;
+
+    /* --- accent: muted teal tint --- */
+    --accent: #1e3328;
+    --accent-foreground: #c6dfc9;
+
+    /* --- destructive --- */
+    --destructive: hsl(0 72% 51%);
+    --destructive-foreground: #e8f2e5;
+
+    /* --- borders / inputs --- */
+    --border: #243e36;
+    --input: #1e3328;
+    --ring: #7ca982;
+
+    /* --- charts --- */
+    --chart-1: #7ca982;
+    --chart-2: #a3c4a8;
+    --chart-3: #4d8c62;
+    --chart-4: #b8d8bc;
+    --chart-5: #c6e0c9;
+
+    /* --- sidebar --- */
+    --sidebar-background: #0a1410;
+    --sidebar-foreground: #c6dfc9;
+    --sidebar-primary: #f1f7ed;
+    --sidebar-primary-foreground: #243e36;
+    --sidebar-accent: #1e3328;
+    --sidebar-accent-foreground: #c6dfc9;
+    --sidebar-border: #1e3328;
+    --sidebar-ring: #7ca982;
+    --sidebar: #0a1410;
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
