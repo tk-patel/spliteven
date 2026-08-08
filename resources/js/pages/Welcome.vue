@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { dashboard, login } from '@/routes';
+import AppLogo from '@/components/AppLogo.vue';
+import { dashboard, home, login } from '@/routes';
 import { register } from '@/routes';
 </script>
 
@@ -15,7 +16,11 @@ import { register } from '@/routes';
         <header
             class="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl"
         >
-            <nav class="flex items-center justify-end gap-4">
+            <nav class="flex items-center justify-between gap-4">
+                <Link :href="home()" class="flex items-center gap-2">
+                    <AppLogo />
+                </Link>
+                <div class="flex items-center gap-4">
                 <Link
                     v-if="$page.props.auth.user"
                     :href="dashboard()"
@@ -37,6 +42,7 @@ import { register } from '@/routes';
                         Register
                     </Link>
                 </template>
+                </div>
             </nav>
         </header>
         <div
