@@ -66,6 +66,7 @@ watch(username, () => {
     <Form
         v-bind="store.form()"
         :reset-on-success="['password', 'password_confirmation']"
+        :preserve-scroll="false"
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
