@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Response;
 
 class CircleController extends Controller
@@ -59,35 +60,44 @@ class CircleController extends Controller
     }
 
     /**
-     * Search for users by username.
+     * Search for a user by exact username match.
      */
     public function search(Request $request): JsonResponse
     {
-        $request->validate(['query' => 'required|string|min:2|max:30']);
+        $request->merge([
+            'query' => Str::lower($request->string('query')->toString()),
+        ]);
+
+        $validated = $request->validate([
+            'query' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_]+$/'],
+        ]);
 
         $user = auth()->user();
+        $username = $validated['query'];
 
-        $results = User::where('username', 'like', '%'.$request->query('query').'%')
+        $result = User::query()
+            ->where('username', $username)
             ->where('id', '!=', $user->id)
-            ->limit(10)
-            ->get(['id', 'name', 'username']);
+            ->first(['id', 'name', 'username']);
 
-        $results = $results->map(function ($result) use ($user) {
-            $friendship = Friendship::where(function ($q) use ($user, $result) {
-                $q->where('requester_id', $user->id)->where('addressee_id', $result->id);
-            })->orWhere(function ($q) use ($user, $result) {
-                $q->where('requester_id', $result->id)->where('addressee_id', $user->id);
-            })->first();
+        if ($result === null) {
+            return response()->json(['results' => []]);
+        }
 
-            return [
+        $friendship = Friendship::where(function ($q) use ($user, $result) {
+            $q->where('requester_id', $user->id)->where('addressee_id', $result->id);
+        })->orWhere(function ($q) use ($user, $result) {
+            $q->where('requester_id', $result->id)->where('addressee_id', $user->id);
+        })->first();
+
+        return response()->json([
+            'results' => [[
                 'id' => $result->id,
                 'name' => $result->name,
                 'username' => $result->username,
                 'friendship_status' => $friendship?->status,
-            ];
-        });
-
-        return response()->json(['results' => $results]);
+            ]],
+        ]);
     }
 
     /**
@@ -149,6 +159,24 @@ class CircleController extends Controller
         $friendship->update(['status' => 'rejected']);
 
         return back()->with('success', 'Friend request rejected.');
+    }
+
+    /**
+     * Cancel a pending friend request sent by the current user.
+     */
+    public function cancel(Friendship $friendship): RedirectResponse
+    {
+        if ($friendship->requester_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($friendship->status !== 'pending') {
+            abort(403);
+        }
+
+        $friendship->delete();
+
+        return back()->with('success', 'Friend request cancelled.');
     }
 
     /**

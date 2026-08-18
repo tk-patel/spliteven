@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { UserCheck, UserMinus, UserPlus, Users } from '@lucide/vue';
-import { ref } from 'vue';
+import { Clock, UserCheck, UserMinus, UserPlus, Users, X } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
 import SearchSheet from '@/components/SearchSheet.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserAvatar from '@/components/UserAvatar.vue';
 
 type Friend = {
@@ -27,7 +29,7 @@ type PendingSent = {
     created_at: string;
 };
 
-defineProps<{
+const props = defineProps<{
     friends: Friend[];
     pendingReceived: PendingRequest[];
     pendingSent: PendingSent[];
@@ -35,8 +37,18 @@ defineProps<{
 
 const searchOpen = ref(false);
 
+const defaultTab = computed(() =>
+    props.friends.length === 0 && props.pendingSent.length > 0 ? 'sent' : 'circle',
+);
+
 const respond = (type: 'accept' | 'reject', friendshipId: number) => {
     router.post(`/circle/${type}/${friendshipId}`, {}, { preserveScroll: true });
+};
+
+const cancel = (friendshipId: number) => {
+    if (confirm('Cancel this friend request?')) {
+        router.delete(`/circle/cancel/${friendshipId}`, { preserveScroll: true });
+    }
 };
 
 const remove = (friendshipId: number) => {
@@ -63,22 +75,22 @@ const formattedDate = (date: string) =>
         </div>
 
         <!-- Pending received -->
-        <section v-if="pendingReceived.length > 0" class="space-y-3">
+        <section v-if="pendingReceived.length > 0" class="space-y-2">
             <h2 class="text-sm font-semibold text-muted-foreground uppercase">
                 Pending requests
             </h2>
             <Card v-for="request in pendingReceived" :key="request.id">
-                <CardContent class="flex items-center justify-between p-4">
-                    <div class="flex items-center gap-3">
+                <CardContent class="flex items-center justify-between px-3 py-2 md:px-4 md:py-3">
+                    <div class="flex min-w-0 items-center gap-3">
                         <UserAvatar :name="request.requester.name" />
-                        <div>
-                            <p class="text-sm font-medium">{{ request.requester.name }}</p>
-                            <p class="text-xs text-muted-foreground">
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-medium">{{ request.requester.name }}</p>
+                            <p class="truncate text-xs text-muted-foreground">
                                 @{{ request.requester.username }} · {{ formattedDate(request.created_at) }}
                             </p>
                         </div>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex shrink-0 gap-2">
                         <Button size="sm" @click="respond('accept', request.id)">
                             <UserCheck class="mr-1 h-3 w-3" />
                             Accept
@@ -91,61 +103,87 @@ const formattedDate = (date: string) =>
             </Card>
         </section>
 
-        <!-- Pending sent -->
-        <section v-if="pendingSent.length > 0" class="space-y-3">
-            <h2 class="text-sm font-semibold text-muted-foreground uppercase">
-                Sent requests
-            </h2>
-            <Card v-for="request in pendingSent" :key="request.id">
-                <CardContent class="flex items-center justify-between p-4">
-                    <div class="flex items-center gap-3">
-                        <UserAvatar :name="request.addressee.name" />
-                        <div>
-                            <p class="text-sm font-medium">{{ request.addressee.name }}</p>
-                            <p class="text-xs text-muted-foreground">
-                                @{{ request.addressee.username }} · {{ formattedDate(request.created_at) }}
-                            </p>
+        <Tabs :default-value="defaultTab" class="w-full">
+            <TabsList class="grid w-full grid-cols-2">
+                <TabsTrigger value="circle" class="gap-1.5">
+                    Your Circle
+                    <Badge v-if="friends.length > 0" variant="secondary" class="h-5 min-w-5 px-1">
+                        {{ friends.length }}
+                    </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="sent" class="gap-1.5">
+                    Sent requests
+                    <Badge v-if="pendingSent.length > 0" variant="secondary" class="h-5 min-w-5 px-1">
+                        {{ pendingSent.length }}
+                    </Badge>
+                </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="circle" class="mt-4 space-y-2">
+                <EmptyState
+                    v-if="friends.length === 0"
+                    :icon="Users"
+                    title="Your Circle is empty"
+                    description="Search by username to add friends"
+                />
+
+                <Card v-for="friend in friends" :key="friend.id">
+                    <CardContent class="flex items-center justify-between px-3 py-2 md:px-4 md:py-3">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <UserAvatar :name="friend.name" />
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium">{{ friend.name }}</p>
+                                <p class="truncate text-xs text-muted-foreground">@{{ friend.username }}</p>
+                            </div>
                         </div>
-                    </div>
-                    <span class="text-xs font-medium text-muted-foreground">Pending</span>
-                </CardContent>
-            </Card>
-        </section>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            class="shrink-0 text-muted-foreground hover:text-destructive"
+                            @click="remove(friend.friendship_id)"
+                        >
+                            <UserMinus class="mr-1 h-3 w-3" />
+                            Remove
+                        </Button>
+                    </CardContent>
+                </Card>
+            </TabsContent>
 
-        <!-- Friends list -->
-        <section class="space-y-3">
-            <h2 class="text-sm font-semibold text-muted-foreground uppercase">
-                Your Circle ({{ friends.length }})
-            </h2>
+            <TabsContent value="sent" class="mt-4 space-y-2">
+                <EmptyState
+                    v-if="pendingSent.length === 0"
+                    :icon="Clock"
+                    title="No sent requests"
+                    description="Friend requests you send will appear here until accepted"
+                />
 
-            <EmptyState
-                v-if="friends.length === 0 && pendingReceived.length === 0 && pendingSent.length === 0"
-                :icon="Users"
-                title="Your Circle is empty"
-                description="Search by username to add friends"
-            />
-
-            <Card v-for="friend in friends" :key="friend.id">
-                <CardContent class="flex items-center justify-between p-4">
-                    <div class="flex items-center gap-3">
-                        <UserAvatar :name="friend.name" />
-                        <div>
-                            <p class="text-sm font-medium">{{ friend.name }}</p>
-                            <p class="text-xs text-muted-foreground">@{{ friend.username }}</p>
+                <Card v-for="request in pendingSent" :key="request.id">
+                    <CardContent class="flex items-center justify-between gap-2 px-3 py-2 md:px-4 md:py-3">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <UserAvatar :name="request.addressee.name" />
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-medium">{{ request.addressee.name }}</p>
+                                <p class="truncate text-xs text-muted-foreground">
+                                    @{{ request.addressee.username }} · {{ formattedDate(request.created_at) }}
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        class="text-muted-foreground hover:text-destructive"
-                        @click="remove(friend.friendship_id)"
-                    >
-                        <UserMinus class="mr-1 h-3 w-3" />
-                        Remove
-                    </Button>
-                </CardContent>
-            </Card>
-        </section>
+                        <div class="flex shrink-0 items-center gap-2">
+                            <Badge variant="outline" class="hidden sm:inline-flex">Pending</Badge>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                class="h-8 px-2 text-muted-foreground hover:text-destructive"
+                                @click="cancel(request.id)"
+                            >
+                                <X class="h-3.5 w-3.5 sm:mr-1" />
+                                <span class="hidden sm:inline">Cancel</span>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
 
         <SearchSheet v-model:open="searchOpen" />
     </div>

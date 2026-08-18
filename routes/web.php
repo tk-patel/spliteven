@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/invite/{user}', [CircleController::class, 'invite'])->name('invite');
         Route::post('/accept/{friendship}', [CircleController::class, 'accept'])->name('accept');
         Route::post('/reject/{friendship}', [CircleController::class, 'reject'])->name('reject');
+        Route::delete('/cancel/{friendship}', [CircleController::class, 'cancel'])->name('cancel');
         Route::delete('/{friendship}', [CircleController::class, 'remove'])->name('remove');
     });
 

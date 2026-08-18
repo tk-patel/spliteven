@@ -94,6 +94,53 @@ test('user can reject friend request', function () {
     ]);
 });
 
+test('user can cancel pending sent friend request', function () {
+    $alice = User::factory()->create();
+    $bob = User::factory()->create();
+
+    $friendship = Friendship::create([
+        'requester_id' => $alice->id,
+        'addressee_id' => $bob->id,
+        'status' => 'pending',
+    ]);
+
+    $response = $this->actingAs($alice)->delete(route('circle.cancel', $friendship));
+
+    $response->assertRedirect();
+    $this->assertDatabaseMissing('friendships', ['id' => $friendship->id]);
+});
+
+test('user cannot cancel others pending friend request', function () {
+    $alice = User::factory()->create();
+    $bob = User::factory()->create();
+    $charlie = User::factory()->create();
+
+    $friendship = Friendship::create([
+        'requester_id' => $alice->id,
+        'addressee_id' => $bob->id,
+        'status' => 'pending',
+    ]);
+
+    $response = $this->actingAs($charlie)->delete(route('circle.cancel', $friendship));
+
+    $response->assertForbidden();
+});
+
+test('user cannot cancel accepted friendship', function () {
+    $alice = User::factory()->create();
+    $bob = User::factory()->create();
+
+    $friendship = Friendship::create([
+        'requester_id' => $alice->id,
+        'addressee_id' => $bob->id,
+        'status' => 'accepted',
+    ]);
+
+    $response = $this->actingAs($alice)->delete(route('circle.cancel', $friendship));
+
+    $response->assertForbidden();
+});
+
 test('user can remove friend', function () {
     $alice = User::factory()->create();
     $bob = User::factory()->create();
@@ -140,12 +187,39 @@ test('circle index shows friends and pending requests', function () {
         );
 });
 
-test('circle search finds users by username', function () {
+test('circle search finds user by exact username', function () {
+    $alice = User::factory()->create(['username' => 'alice_01']);
+    User::factory()->create(['username' => 'bob_02']);
+
+    $response = $this->actingAs($alice)->postJson(route('circle.search'), [
+        'query' => 'bob_02',
+    ]);
+
+    $response
+        ->assertOk()
+        ->assertJsonCount(1, 'results')
+        ->assertJsonPath('results.0.username', 'bob_02');
+});
+
+test('circle search does not match partial usernames', function () {
     $alice = User::factory()->create(['username' => 'alice_01']);
     User::factory()->create(['username' => 'bob_02']);
 
     $response = $this->actingAs($alice)->postJson(route('circle.search'), [
         'query' => 'bob',
+    ]);
+
+    $response
+        ->assertOk()
+        ->assertJsonCount(0, 'results');
+});
+
+test('circle search is case insensitive', function () {
+    $alice = User::factory()->create(['username' => 'alice_01']);
+    User::factory()->create(['username' => 'bob_02']);
+
+    $response = $this->actingAs($alice)->postJson(route('circle.search'), [
+        'query' => 'BOB_02',
     ]);
 
     $response
